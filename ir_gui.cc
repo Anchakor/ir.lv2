@@ -465,16 +465,6 @@ static void gui_load_sndfile(struct control * cp, char * filename) {
 		fprintf(stderr, "IR: load_sndfile error\n");
 		ir_wavedisplay_set_message(IR_WAVEDISPLAY(cp->wave_display), NULL);
 	} else {
-		uint64_t hash = fhash(filename);
-		float value0, value1, value2;
-		ports_from_fhash(hash, &value0, &value1, &value2);
-		cp->write_function(cp->controller, IR_PORT_FHASH_0, sizeof(float),
-				   0 /* default format */, &value0);
-		cp->write_function(cp->controller, IR_PORT_FHASH_1, sizeof(float),
-				   0 /* default format */, &value1);
-		cp->write_function(cp->controller, IR_PORT_FHASH_2, sizeof(float),
-				   0 /* default format */, &value2);
-
 		cp->ir->reinit_running = 1;
 		cp->gui_load_thread = g_thread_create(gui_load_thread, cp, TRUE, NULL);
 		cp->gui_load_timeout_tag = g_timeout_add(100, gui_load_timeout_callback, cp);
@@ -1666,9 +1656,6 @@ static void port_event(LV2UI_Handle ui,
 					     (*pval > 0.0f));
 	} else if (port_index == IR_PORT_WET_GAIN) {
 		set_adjustment(cp, cp->adj_wet_gain, *pval);
-	} else if (port_index == IR_PORT_FHASH_0) { /* NOP: plugin itself handles IR loading on session resume */
-	} else if (port_index == IR_PORT_FHASH_1) { /* NOP */
-	} else if (port_index == IR_PORT_FHASH_2) { /* NOP */
 	} else if (port_index == IR_PORT_METER_DRY_L) {
 		ir_meter_set_level(IR_METER(cp->meter_L_dry), convert_real_to_scale(ADJ_DRY_GAIN, CO_DB(*pval)));
 	} else if (port_index == IR_PORT_METER_DRY_R) {

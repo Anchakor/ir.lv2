@@ -24,17 +24,11 @@
 #include "ir.h"
 
 #define IR_SAVE_FILE    ".ir_save"
-#define GROUP_FHASH     "file-hashes"
 #define GROUP_BOOKMARKS "bookmarks"
 
 
-uint64_t fhash(char *str);
-uint64_t fhash_from_ports(float *port0, float *port1, float *port2);
-void ports_from_fhash(uint64_t fhash, float *port0, float *port1, float *port2);
 GKeyFile * load_keyfile(void);
 void save_keyfile(GKeyFile * keyfile);
-char * get_path_from_key(GKeyFile * keyfile, uint64_t fhash);
-void save_path(GKeyFile * keyfile, char * path);
 void load_bookmarks(GKeyFile * keyfile, GtkListStore * store);
 char * lookup_bookmark_in_store(GtkTreeModel * model, const char * bookmark);
 void store_bookmark(GKeyFile * keyfile, char * bookmark, char * fullpath);
