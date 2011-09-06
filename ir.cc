@@ -573,7 +573,7 @@ static gpointer IR_configurator_thread(gpointer data) {
 
 	while (!ir->conf_thread_exit) {
 		if (ir->run > 0) {
-            if(ir->source_path != NULL) {
+            //if(ir->source_path != NULL) {
                 uint64_t fhash = fhash_from_ports(ir->port_fhash_0,
                                   ir->port_fhash_1,
                                   ir->port_fhash_2);
@@ -589,7 +589,7 @@ static gpointer IR_configurator_thread(gpointer data) {
                         goto noload;
                     }
                 }
-            }
+            //}
             if (load_sndfile(ir) == 0) {
                 int r = resample_init(ir);
                 if (r == 0) {
