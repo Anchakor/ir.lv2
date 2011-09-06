@@ -30,6 +30,7 @@
 #include <zita-convolver.h>
 
 #define IR_URI                    "http://factorial.hu/plugins/lv2/ir"
+#define NS_XSD                    "http://www.w3.org/2001/XMLSchema#"
 
 #define BSIZE       0x4000      /* Blocksize for soundfile data access */
 #define BSIZE_SR    0x1000      /* Blocksize for SRC */
@@ -146,6 +147,9 @@ typedef struct _ir {
 	SRC_DATA src_data;
 	int src_in_frames;
 	int src_out_frames;
+
+    uint32_t uri_ir;
+    uint32_t uri_xsd_string;
 
 	/* Processing state */
 	float width;     /*  internal  */

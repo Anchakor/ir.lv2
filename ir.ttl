@@ -25,6 +25,7 @@
       foaf:homepage <http://factorial.hu/>;
       foaf:mbox <mailto:tomszilagyi@gmail.com>;
     ];
+    lv2:optionalFeature <http://lv2plug.in/ns/ext/persist> ;
 
     uiext:ui <http://factorial.hu/plugins/lv2/ir/gui>;
 

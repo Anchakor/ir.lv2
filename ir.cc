@@ -29,6 +29,8 @@
 #include <samplerate.h>
 #include <zita-convolver.h>
 #include <lv2.h>
+#include <persist.h>
+#include <uri-map.h>
 
 #include "ir.h"
 #include "ir_utils.h"
@@ -570,37 +572,41 @@ static gpointer IR_configurator_thread(gpointer data) {
 	struct timespec trem;
 
 	while (!ir->conf_thread_exit) {
-		if ((ir->run > 0) && !ir->first_conf_done) {
-			uint64_t fhash = fhash_from_ports(ir->port_fhash_0,
-							  ir->port_fhash_1,
-							  ir->port_fhash_2);
-			//printf("IR confthread: fhash = %016" PRIx64 "\n", fhash);
-			if (fhash) {
-				char * filename = get_path_from_key(keyfile, fhash);
-				if (filename) {
-					//printf("  load filename=%s\n", filename);
-					ir->source_path = filename;
-					if (load_sndfile(ir) == 0) {
-						int r = resample_init(ir);
-						if (r == 0) {
-							while ((r == 0) && (!ir->conf_thread_exit)) {
-								r = resample_do(ir);
-							}
-							resample_cleanup(ir);
-						}
-						if (r >= 0) {
-							prepare_convdata(ir);
-							init_conv(ir);
-						}
-					} else {
-						free(ir->source_path);
-						ir->source_path = NULL;
-					}
-				} else {
-					fprintf(stderr, "IR: fhash=%016" PRIx64
-						" was not found in DB\n", fhash);
-				}
-			}
+		if (ir->run > 0) {
+            if(ir->source_path != NULL) {
+                uint64_t fhash = fhash_from_ports(ir->port_fhash_0,
+                                  ir->port_fhash_1,
+                                  ir->port_fhash_2);
+                //printf("IR confthread: fhash = %016" PRIx64 "\n", fhash);
+                if (fhash && NULL == ir->source_path) {
+                    char * filename = get_path_from_key(keyfile, fhash);
+                    if (filename) {
+                        //printf("  load filename=%s\n", filename);
+                        ir->source_path = filename;
+                    } else {
+                        fprintf(stderr, "IR: fhash=%016" PRIx64
+                            " was not found in DB\n", fhash);
+                        goto noload;
+                    }
+                }
+            }
+            if (load_sndfile(ir) == 0) {
+                int r = resample_init(ir);
+                if (r == 0) {
+                    while ((r == 0) && (!ir->conf_thread_exit)) {
+                        r = resample_do(ir);
+                    }
+                    resample_cleanup(ir);
+                }
+                if (r >= 0) {
+                    prepare_convdata(ir);
+                    init_conv(ir);
+                }
+            } else {
+                free(ir->source_path);
+                ir->source_path = NULL;
+            }
+noload:
 			ir->first_conf_done = 1;
 			return NULL;
 		}
@@ -619,8 +625,18 @@ static LV2_Handle instantiateIR(const LV2_Descriptor *descriptor,
 				const LV2_Feature *const *features) {
 
 	IR * ir = (IR *)calloc(1, sizeof(IR));
+	
+    LV2_URI_Map_Feature* map = (LV2_URI_Map_Feature *)malloc(sizeof (LV2_URI_Map_Feature));
+    /* Scan host features for event and uri-map */
+    for (int i = 0; features[i]; ++i) {
+        if (strcmp(features[i]->URI, LV2_URI_MAP_URI) == 0) {
+            map = (LV2_URI_Map_Feature*)features[i]->data;
+            ir->uri_ir = map->uri_to_id(map->callback_data, NULL, IR_URI "#irfilename");
+            ir->uri_xsd_string = map->uri_to_id(map->callback_data, NULL, NS_XSD "string");
+        }
+    } 
 
-	ir->sample_rate = sample_rate;
+    ir->sample_rate = sample_rate;
 	ir->reinit_pending = 0;
 	ir->maxsize = MAXSIZE;
 	ir->block_length = IR_DEFAULT_JACK_BUFLEN;
@@ -803,8 +819,41 @@ static void runIR(LV2_Handle instance, uint32_t n) {
 	ir->run = 1;
 }
 
+void pIR_save(LV2_Handle                 instance,
+             LV2_Persist_Store_Function store,
+             void*                      callback_data)
+{
+    IR * ir = (IR *)instance;
+
+    store(callback_data, ir->uri_ir, ir->source_path, strlen(ir->source_path) + 1, ir->uri_xsd_string, LV2_PERSIST_IS_PORTABLE);
+}
+
+void pIR_restore(LV2_Handle                    instance,
+                LV2_Persist_Retrieve_Function retrieve,
+                void*                         callback_data)
+{
+    IR * ir = (IR *)instance;
+
+    size_t      size;
+    uint32_t    type;
+    uint32_t    flags;
+    const char* irpath = (const char *)retrieve(callback_data, ir->uri_ir, &size, &type, &flags);
+
+    if (irpath) {
+        free(ir->source_path);
+        ir->source_path = strdup(irpath);
+    } else {
+        ir->source_path = NULL;
+    }
+}
+
 const void * extdata_IR(const char * uri) {
-	return NULL;
+    if (strcmp(uri, LV2_PERSIST_URI) == 0) {
+        static const LV2_Persist persist = { pIR_save, pIR_restore };
+        return &persist;
+    } else {
+        return NULL;
+    }
 }
 
 void __attribute__ ((constructor)) init() {
