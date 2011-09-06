@@ -583,11 +583,10 @@ static gpointer IR_configurator_thread(gpointer data) {
                 if (filename) {
                     //printf("  load filename=%s\n", filename);
                     ir->source_path = filename;
-                } else {
-                    /* fprintf(stderr, "IR: fhash=%016" PRIx64
-                        " was not found in DB\n", fhash); */
-                    goto noload;
-                }
+                } /* else {
+                    fprintf(stderr, "IR: fhash=%016" PRIx64
+                        " was not found in DB\n", fhash);
+                } */
             }
             // loading
             if (load_sndfile(ir) == 0) {
