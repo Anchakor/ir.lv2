@@ -573,23 +573,23 @@ static gpointer IR_configurator_thread(gpointer data) {
 
 	while (!ir->conf_thread_exit) {
 		if (ir->run > 0) {
-            //if(ir->source_path != NULL) {
-                uint64_t fhash = fhash_from_ports(ir->port_fhash_0,
-                                  ir->port_fhash_1,
-                                  ir->port_fhash_2);
-                //printf("IR confthread: fhash = %016" PRIx64 "\n", fhash);
-                if (fhash && NULL == ir->source_path) {
-                    char * filename = get_path_from_key(keyfile, fhash);
-                    if (filename) {
-                        //printf("  load filename=%s\n", filename);
-                        ir->source_path = filename;
-                    } else {
-                        fprintf(stderr, "IR: fhash=%016" PRIx64
-                            " was not found in DB\n", fhash);
-                        goto noload;
-                    }
+            // trying to get hash
+            uint64_t fhash = fhash_from_ports(ir->port_fhash_0,
+                              ir->port_fhash_1,
+                              ir->port_fhash_2);
+            //printf("IR confthread: fhash = %016" PRIx64 "\n", fhash);
+            if (fhash && NULL == ir->source_path) {
+                char * filename = get_path_from_key(keyfile, fhash);
+                if (filename) {
+                    //printf("  load filename=%s\n", filename);
+                    ir->source_path = filename;
+                } else {
+                    /* fprintf(stderr, "IR: fhash=%016" PRIx64
+                        " was not found in DB\n", fhash); */
+                    goto noload;
                 }
-            //}
+            }
+            // loading
             if (load_sndfile(ir) == 0) {
                 int r = resample_init(ir);
                 if (r == 0) {
@@ -606,7 +606,6 @@ static gpointer IR_configurator_thread(gpointer data) {
                 free(ir->source_path);
                 ir->source_path = NULL;
             }
-noload:
 			ir->first_conf_done = 1;
 			return NULL;
 		}
