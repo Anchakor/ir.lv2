@@ -26,6 +26,33 @@
 #include "ir.h"
 #include "ir_utils.h"
 
+/* Hash function to obtain key to IR file path.
+ * This is the djb2 algorithm taken from:
+ *   http://www.cse.yorku.ca/~oz/hash.html
+ */
+uint64_t fhash(char *str) {
+        uint64_t hash = 5381;
+        int c;
+	
+        while ((c = *str++)) {
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+	}
+        return hash;
+}
+
+uint64_t fhash_from_ports(float *port0, float *port1, float *port2) {
+	uint64_t val0 = ((uint64_t)*port0) & 0xffff;
+	uint64_t val1 = ((uint64_t)*port1) & 0xffffff;
+	uint64_t val2 = ((uint64_t)*port2) & 0xffffff;
+	return (val0 << 48) + (val1 << 24) + val2;
+}
+
+void ports_from_fhash(uint64_t fhash, float *port0, float *port1, float *port2) {
+	*port0 = (float)((fhash >> 48) & 0xffff);
+	*port1 = (float)((fhash >> 24) & 0xffffff);
+	*port2 = (float)(fhash & 0xffffff);
+}
+
 GKeyFile * load_keyfile(void) {
 	GKeyFile * keyfile = g_key_file_new();
 	gchar * ir_save_path = g_build_filename(g_get_home_dir(), IR_SAVE_FILE, NULL);
@@ -49,6 +76,20 @@ void save_keyfile(GKeyFile * keyfile) {
 	}
 	g_free(ir_save_path);
 	g_free(file_contents);
+}
+
+char * get_path_from_key(GKeyFile * keyfile, uint64_t fhash) {
+	char key[20];
+	snprintf(key, 20, "%016" PRIx64, fhash);
+	char * path = g_key_file_get_string(keyfile, GROUP_FHASH, key, NULL);
+	return path;
+}
+
+void save_path(GKeyFile * keyfile, char * path) {
+	uint64_t hash = fhash(path);
+	char key[20];
+	snprintf(key, 20, "%016" PRIx64, hash);
+	g_key_file_set_string(keyfile, GROUP_FHASH, key, path);
 }
 
 void load_bookmarks(GKeyFile * keyfile, GtkListStore * store) {

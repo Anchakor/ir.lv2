@@ -106,6 +106,17 @@ static void connectPortIR(LV2_Handle instance,
 		ir->port_wet_gain = (float*)data;
 		break;
 
+	/* Save/Restore */
+	case IR_PORT_FHASH_0:
+		ir->port_fhash_0 = (float*)data;
+		break;
+	case IR_PORT_FHASH_1:
+		ir->port_fhash_1 = (float*)data;
+		break;
+	case IR_PORT_FHASH_2:
+		ir->port_fhash_2 = (float*)data;
+		break;
+
 	/* Meter ports */
 	case IR_PORT_METER_DRY_L:
 		ir->port_meter_dry_L = (float*)data;
@@ -189,6 +200,7 @@ static void cleanupIR(LV2_Handle instance) {
 	free_ir_samples(ir);
 
 	if (ir->source_path && (strlen(ir->source_path) > 0)) {
+		save_path(keyfile, ir->source_path);
 		free(ir->source_path);
 	}
 
@@ -561,6 +573,23 @@ static gpointer IR_configurator_thread(gpointer data) {
 
 	while (!ir->conf_thread_exit) {
 		if (ir->run > 0) {
+            if(ir->source_path != NULL) {
+                uint64_t fhash = fhash_from_ports(ir->port_fhash_0,
+                                  ir->port_fhash_1,
+                                  ir->port_fhash_2);
+                //printf("IR confthread: fhash = %016" PRIx64 "\n", fhash);
+                if (fhash && NULL == ir->source_path) {
+                    char * filename = get_path_from_key(keyfile, fhash);
+                    if (filename) {
+                        //printf("  load filename=%s\n", filename);
+                        ir->source_path = filename;
+                    } else {
+                        fprintf(stderr, "IR: fhash=%016" PRIx64
+                            " was not found in DB\n", fhash);
+                        goto noload;
+                    }
+                }
+            }
             if (load_sndfile(ir) == 0) {
                 int r = resample_init(ir);
                 if (r == 0) {
@@ -577,6 +606,7 @@ static gpointer IR_configurator_thread(gpointer data) {
                 free(ir->source_path);
                 ir->source_path = NULL;
             }
+noload:
 			ir->first_conf_done = 1;
 			return NULL;
 		}

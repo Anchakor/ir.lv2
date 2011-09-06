@@ -64,6 +64,11 @@
 #define IR_PORT_WET_SW       16  /* Wet switch [on/off] */
 #define IR_PORT_WET_GAIN     17  /* Wet gain [dB] */
 
+/* Save/Restore ports */
+#define IR_PORT_FHASH_0      18
+#define IR_PORT_FHASH_1      19
+#define IR_PORT_FHASH_2      20
+
 /* Meter ports (output) */
 #define IR_PORT_METER_DRY_L  21
 #define IR_PORT_METER_DRY_R  22
@@ -105,6 +110,9 @@ typedef struct _ir {
 	float * port_dry_gain;
 	float * port_wet_sw;
 	float * port_wet_gain;
+	float * port_fhash_0;
+	float * port_fhash_1;
+	float * port_fhash_2;
 	float * port_meter_dry_L;
 	float * port_meter_dry_R;
 	float * port_meter_wet_L;
