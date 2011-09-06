@@ -465,6 +465,8 @@ static void gui_load_sndfile(struct control * cp, char * filename) {
 		fprintf(stderr, "IR: load_sndfile error\n");
 		ir_wavedisplay_set_message(IR_WAVEDISPLAY(cp->wave_display), NULL);
 	} else {
+        send_port_value_to_host(cp, IR_PORT_PREDELAY, cp->predelay);
+
 		cp->ir->reinit_running = 1;
 		cp->gui_load_thread = g_thread_create(gui_load_thread, cp, TRUE, NULL);
 		cp->gui_load_timeout_tag = g_timeout_add(100, gui_load_timeout_callback, cp);
