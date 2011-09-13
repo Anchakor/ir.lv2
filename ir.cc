@@ -628,11 +628,10 @@ static LV2_Handle instantiateIR(const LV2_Descriptor *descriptor,
 
 	IR * ir = (IR *)calloc(1, sizeof(IR));
 	
-    LV2_URI_Map_Feature* map = (LV2_URI_Map_Feature *)malloc(sizeof (LV2_URI_Map_Feature));
     /* Scan host features for event and uri-map */
     for (int i = 0; features[i]; ++i) {
         if (strcmp(features[i]->URI, LV2_URI_MAP_URI) == 0) {
-            map = (LV2_URI_Map_Feature*)features[i]->data;
+            LV2_URI_Map_Feature* map = (LV2_URI_Map_Feature*)features[i]->data;
             ir->uri_ir = map->uri_to_id(map->callback_data, NULL, IR_URI "#irfilename");
             ir->uri_xsd_string = map->uri_to_id(map->callback_data, NULL, NS_XSD "string");
         }
@@ -842,7 +841,7 @@ void pIR_restore(LV2_Handle                    instance,
     const char* irpath = (const char *)retrieve(callback_data, ir->uri_ir, &size, &type, &flags);
 
     if (irpath) {
-        free(ir->source_path);
+        if (ir->source_path) free(ir->source_path);
         ir->source_path = strdup(irpath);
     } else {
         ir->source_path = NULL;
