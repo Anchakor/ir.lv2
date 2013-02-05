@@ -849,8 +849,8 @@ pIR_restore(LV2_Handle                 instance,
 
     size_t      size;
     uint32_t    type;
-    uint32_t    flags;
-    const char* irpath = (const char *)retrieve(handle, ir->uri_irfilepath, &size, &type, &flags);
+    uint32_t    flags1;
+    const char* irpath = (const char *)retrieve(handle, ir->uri_irfilepath, &size, &type, &flags1);
 
     if (irpath) {
         if (ir->source_path) free(ir->source_path);
