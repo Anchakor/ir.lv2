@@ -2,10 +2,9 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix lv2:  <http://lv2plug.in/ns/lv2core#>.
 @prefix doap: <http://usefulinc.com/ns/doap#>.
-@prefix llext: <http://ll-plugins.nongnu.org/lv2/ext/>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
 @prefix ue: <http://lv2plug.in/ns/extensions/units#>.
-@prefix epp: <http://lv2plug.in/ns/dev/extportinfo#>.
+@prefix epp: <http://lv2plug.in/ns/ext/port-props/#>.
 @prefix uiext: <http://lv2plug.in/ns/extensions/ui#>.
 
 
