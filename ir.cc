@@ -29,9 +29,9 @@
 #include <samplerate.h>
 #include <zita-convolver.h>
 #include <lv2.h>
-//#include <urid.h>
-//#include <state.h>
-//#include <atom.h>
+#include "lv2/lv2plug.in/ns/ext/atom/atom.h"
+#include "lv2/lv2plug.in/ns/ext/urid/urid.h"
+#include "lv2/lv2plug.in/ns/ext/state/state.h"
 
 #include "ir.h"
 #include "ir_utils.h"
@@ -629,7 +629,7 @@ static LV2_Handle instantiateIR(const LV2_Descriptor *descriptor,
 
 	IR * ir = (IR *)calloc(1, sizeof(IR));
 	
-    /* Scan host features for event and uridp */
+    /* Scan host features for uridp */
     for (int i = 0; features[i]; ++i) {
         if (strcmp(features[i]->URI, LV2_URID__map) == 0) {
             LV2_URID_Map* map = (LV2_URID_Map*)features[i]->data;
