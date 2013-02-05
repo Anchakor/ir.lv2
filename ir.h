@@ -148,8 +148,8 @@ typedef struct _ir {
 	int src_in_frames;
 	int src_out_frames;
 
-    uint32_t uri_ir;
-    uint32_t uri_xsd_string;
+    uint32_t uri_irfilepath;
+    uint32_t uri_atom_path;
 
 	/* Processing state */
 	float width;     /*  internal  */

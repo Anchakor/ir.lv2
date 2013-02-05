@@ -29,8 +29,9 @@
 #include <samplerate.h>
 #include <zita-convolver.h>
 #include <lv2.h>
-#include <persist.h>
-#include <uri-map.h>
+//#include <urid.h>
+//#include <state.h>
+//#include <atom.h>
 
 #include "ir.h"
 #include "ir_utils.h"
@@ -628,12 +629,12 @@ static LV2_Handle instantiateIR(const LV2_Descriptor *descriptor,
 
 	IR * ir = (IR *)calloc(1, sizeof(IR));
 	
-    /* Scan host features for event and uri-map */
+    /* Scan host features for event and uridp */
     for (int i = 0; features[i]; ++i) {
-        if (strcmp(features[i]->URI, LV2_URI_MAP_URI) == 0) {
-            LV2_URI_Map_Feature* map = (LV2_URI_Map_Feature*)features[i]->data;
-            ir->uri_ir = map->uri_to_id(map->callback_data, NULL, IR_URI "#irfilename");
-            ir->uri_xsd_string = map->uri_to_id(map->callback_data, NULL, NS_XSD "string");
+        if (strcmp(features[i]->URI, LV2_URID__map) == 0) {
+            LV2_URID_Map* map = (LV2_URID_Map*)features[i]->data;
+            ir->uri_irfilepath = map->map(map->handle, IR_URI "#irfilename");
+	    ir->uri_atom_path = map->map(map->handle, LV2_ATOM__Path);
         }
     } 
 
@@ -820,25 +821,36 @@ static void runIR(LV2_Handle instance, uint32_t n) {
 	ir->run = 1;
 }
 
-void pIR_save(LV2_Handle                 instance,
-             LV2_Persist_Store_Function store,
-             void*                      callback_data)
+LV2_State_Status pIR_save(LV2_Handle	instance,
+        LV2_State_Store_Function  	store,
+        LV2_State_Handle           	handle,
+        uint32_t                   	flags,
+        const LV2_Feature *const * 	features)
 {
     IR * ir = (IR *)instance;
+    store(handle,
+          ir->uri_irfilepath,
+          ir->source_path,
+          strlen(ir->source_path) + 1,
+          ir->uri_atom_path,
+          LV2_STATE_IS_POD);
 
-    store(callback_data, ir->uri_ir, ir->source_path, strlen(ir->source_path) + 1, ir->uri_xsd_string, LV2_PERSIST_IS_PORTABLE);
+    return LV2_STATE_SUCCESS;
 }
 
-void pIR_restore(LV2_Handle                    instance,
-                LV2_Persist_Retrieve_Function retrieve,
-                void*                         callback_data)
+LV2_State_Status
+pIR_restore(LV2_Handle                 instance,
+           LV2_State_Retrieve_Function retrieve,
+           LV2_State_Handle            handle,
+           uint32_t                    flags,
+           const LV2_Feature *const *  features)
 {
     IR * ir = (IR *)instance;
 
     size_t      size;
     uint32_t    type;
     uint32_t    flags;
-    const char* irpath = (const char *)retrieve(callback_data, ir->uri_ir, &size, &type, &flags);
+    const char* irpath = (const char *)retrieve(handle, ir->uri_irfilepath, &size, &type, &flags);
 
     if (irpath) {
         if (ir->source_path) free(ir->source_path);
@@ -846,12 +858,13 @@ void pIR_restore(LV2_Handle                    instance,
     } else {
         ir->source_path = NULL;
     }
+    return LV2_STATE_SUCCESS;
 }
 
 const void * extdata_IR(const char * uri) {
-    if (strcmp(uri, LV2_PERSIST_URI) == 0) {
-        static const LV2_Persist persist = { pIR_save, pIR_restore };
-        return &persist;
+    static const LV2_State_Interface state_iface = { pIR_save, pIR_restore };
+    if (strcmp(uri, LV2_STATE__interface) == 0) {
+        return &state_iface;
     } else {
         return NULL;
     }
