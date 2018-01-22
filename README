@@ -19,6 +19,9 @@ is NO SUPPORT. High quality bug reports and well-tested patches are
 nevertheless welcome. Other correspondence may be mercilessly ignored;
 thank you for your understanding.
 
+Additional patches by https://github.com/Anchakor
+
+For alternative convolution/impulse response plugin check out Klangfalter from https://github.com/DISTRHO/DISTRHO-Ports
 
 Features
 --------
